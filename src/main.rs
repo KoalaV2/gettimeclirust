@@ -3,6 +3,7 @@ use chrono::Datelike;
 // Use reqwest headers to get X-Scope
 use reqwest::header;
 use serde::{Deserialize, Serialize};
+use std::env;
 
 #[derive(Debug, Deserialize)]
 struct Response {
@@ -53,6 +54,11 @@ struct Lesson {
 }
 
 fn main() -> Result<(), reqwest::Error> {
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 2 {
+        println!("Usage: {} <class id>", args[0]);
+        std::process::exit(1);
+    }
     let current_time = chrono::offset::Local::now();
     let mut weekday = current_time.date_naive().weekday().number_from_monday();
     if !(1..=5).contains(&weekday) {
@@ -71,9 +77,7 @@ fn main() -> Result<(), reqwest::Error> {
         .build()
         .unwrap();
     // Class ID or personal ID
-    // TODO: Accept arguments for this.
-    let signature = "20EL2";
-    let signaturestring = format!("{{'signature':'{}'}}", signature);
+    let signaturestring = format!("{{'signature':'{}'}}", args[1]);
     let res: Response = client
         .post("https://web.skola24.se/api/encrypt/signature")
         .headers(headers.clone())
